@@ -1,0 +1,30 @@
+requests
+pydantic==1.*
+google-cloud-vision
+pyjwt[crypto]
+loguru
+rstr
+opencv-python
+pandas
+openpyxl
+Shapely==1.8.1.post1
+pymongo
+httpx
+nicegui
+nicegui-highcharts
+
+# Fastapi
+fastapi
+pathlib
+uvicorn
+python-multipart
+
+# encryption
+cryptography
+pycryptodome
+rstr
+
+# dev
+autopep8
+matplotlib
+pytest

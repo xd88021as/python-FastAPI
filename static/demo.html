@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SelfieAuth</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <style>
+    .container {
+        margin-top: 50px;
+    }
+    .camera-container {
+        text-align: center;
+    }
+    .loader-container {
+        text-align: center;
+    }
+    #cameraView {
+        width: 100%;
+    }
+    .btn-capture {
+        display: none;
+    }
+    .camera-trigger {
+        cursor: pointer;
+        border: 3px dashed #ddd;
+    }
+    .camera-section-container {
+        position: fixed;
+        top:0px;
+        left:0px;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        flex-direction: column;
+        flex: 1
+    }
+    .camera-video {
+        height: calc(100% - 70px);
+    }
+    .camera-capture-button {
+        height: 70px;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        display: flex;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="text-center">SelfieAuth</h1>
+
+    <div id="cameraContainer" style="display: none;" class="camera-section-container">
+      <video id="cameraView" autoplay playsinline style="display: none;" class="camera-video"></video>
+      <div class="p-2 camera-capture-button">
+        <button class="btn btn-lg btn-light btn-capture" id="capture" style="display: none;">
+          拍攝
+        </button>
+      </div>
+    </div>
+
+    <div class="camera-container mt-4">
+      <div id="cameraTrigger" class="shadow rounded p-3 camera-trigger">
+        請拍攝身分證正面
+      </div>
+    </div>
+    <div class="camera-container mt-4">
+      <div id="cameraTrigger1" class="shadow rounded p-3 camera-trigger">
+        請拍攝身分證背面
+      </div>
+    </div>
+    <div class="camera-container mt-4">
+      <div id="cameraTrigger2" class="shadow rounded p-3 camera-trigger">
+        請拍攝健保卡正面
+      </div>
+    </div>
+    <div class="camera-container mt-4">
+      <div id="cameraTrigger3" class="shadow rounded p-3 camera-trigger">
+        請持證自拍
+      </div>
+    </div>
+    <div class="text-center mt-4">
+      <button id="verifyButton" class="btn btn-lg btn-primary text-center">
+        驗證
+      </button>
+    </div>
+
+    <div class="loader-container" id="loaderContainer" style="display: none;">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">驗證中...</span>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <div id="score" style="font-size: 40px; display: none"></div>
+      <i id='shieldTick' class="bi bi-shield-check text-success" style="font-size: 200px; display:none;"></i>
+      <i id='shieldCross' class="bi bi-shield-x text-danger" style="font-size: 200px; display: none;"></i><br/>
+    </div>
+
+    <div id="verifyInfo" class="text-center" style="display: none">
+      <i id="idCardVerify" class="bi me-2"></i><br/>
+      <i id="idCardBackVerify" class="bi me-2"></i><br/>
+      <i id="healthCardVerify" class="bi me-2"></i><br/>
+      <i id="infoVerify" class="bi me-2"></i><br/>
+      <i id="faceVerify" class="bi me-2"></i><br/>
+      <i id="faceScore1" class="bi me-2"></i><br/>
+      <i id="faceScore2" class="bi me-2"></i><br/>
+    </div>
+
+    <div class="text-center mt-4">
+      <div id='errorMessage' style='color: red; display: none; margin-bottom: 10px'></div>
+      <button id="retryButton" class="btn btn-lg btn-success text-center" style="display: none;">
+        回到首頁
+      </button>
+    </div>
+  </div>
+
+  <!-- Add Bootstrap JS and Popper.js -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@2.11.6/dist/umd/popper.min.js"></script>
+
+  <script>
+      const cameraTrigger = document.getElementById('cameraTrigger');
+      const cameraTrigger1 = document.getElementById('cameraTrigger1');
+      const cameraTrigger2 = document.getElementById('cameraTrigger2');
+      const cameraTrigger3 = document.getElementById('cameraTrigger3');
+
+      const score = document.getElementById('score');
+      const cameraView = document.getElementById('cameraView');
+      const cameraContainer = document.getElementById('cameraContainer');
+      const captureButton = document.getElementById('capture');
+      const retryButton = document.getElementById('retryButton');
+      const verifyButton = document.getElementById('verifyButton');
+      const verifyInfo = document.getElementById('verifyInfo');
+      const loaderContainer = document.getElementById('loaderContainer');
+      const shieldTick = document.getElementById('shieldTick');
+      const shieldCross = document.getElementById('shieldCross');
+      const errMessage = document.getElementById('errorMessage');
+      const setting = ['environment', 'environment', 'environment', 'user']
+      let onTriggeredIndex = -1;
+
+      // Initialize camera
+      let stream;
+
+      async function initCamera(imageIndex) {
+          onTriggeredIndex = imageIndex;
+          try {
+
+              stream = await navigator.mediaDevices.getUserMedia({
+                  video: {
+                    facingMode: setting[imageIndex],
+                    width: { ideal: 3840 }, 
+                    height: { ideal: 2160 } 
+                  },
+                  audio: false
+              });
+              cameraView.srcObject = stream;
+
+              if (onTriggeredIndex === 0) {
+                  cameraTrigger.style.display = 'none';
+              } else if (onTriggeredIndex === 1) {
+                  cameraTrigger1.style.display = 'none';
+              } else if (onTriggeredIndex === 2) {
+                  cameraTrigger2.style.display = 'none';
+              } else if (onTriggeredIndex === 3) {
+                  cameraTrigger3.style.display = 'none';
+              }
+              captureButton.style.display = 'block';
+              cameraView.style.display = 'block';
+              cameraContainer.style.display = 'flex';
+          } catch (error) {
+              console.error('Error accessing the camera:', error);
+          }
+      }
+
+      // Trigger the camera when the "cameraTrigger" div is clicked
+      cameraTrigger.addEventListener('click', () => initCamera(0));
+      cameraTrigger1.addEventListener('click', () => initCamera(1));
+      cameraTrigger2.addEventListener('click', () => initCamera(2));
+      cameraTrigger3.addEventListener('click', () => initCamera(3));
+
+
+      retryButton.addEventListener('click', () => {
+          retryButton.style.display = 'none';
+          cameraTrigger.style.display = 'block';
+          cameraTrigger1.style.display = 'block';
+          cameraTrigger2.style.display = 'block';
+          cameraTrigger3.style.display = 'block';
+          verifyButton.style.display = 'inline';
+          verifyInfo.style.display = 'none';
+          score.style.display = 'none';
+          shieldTick.style.display = 'none';
+          shieldCross.style.display = 'none';
+          errorMessage.style.display = 'none';
+      });
+
+      verifyButton.addEventListener('click', () => {
+          // Display the loading spinner
+          loaderContainer.style.display = 'block';
+          cameraTrigger.style.display = 'none';
+          cameraTrigger1.style.display = 'none';
+          cameraTrigger2.style.display = 'none';
+          cameraTrigger3.style.display = 'none';
+          verifyButton.style.display = 'none';
+
+          const taiwaneseIdFront = (cameraTrigger.getElementsByTagName('img')[0].src);
+          const taiwaneseIdBack = (cameraTrigger1.getElementsByTagName('img')[0].src);
+          const nhiImageFront = (cameraTrigger2.getElementsByTagName('img')[0].src);
+          const selfieImage = (cameraTrigger3.getElementsByTagName('img')[0].src);
+
+          const postBody = {
+            id_card_img_post: {
+              img_base64_str: taiwaneseIdFront,
+              img_url: '',
+            },
+            id_card_back_img_post: {
+              img_base64_str: taiwaneseIdBack,
+              img_url: '',
+            },
+            health_card_img_post: {
+              img_base64_str: nhiImageFront,
+              img_url: '',
+            },
+            hold_card_selfie_img_post: {
+              img_base64_str: selfieImage,
+              img_url: '',
+            }
+          }
+
+          // You can now send the base64Image to your API using fetch or any other method.
+          // POST the base64-encoded image to the API
+          fetch('/v1/selfie-with-taiwanese-id/verify', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(postBody),
+          }).then(response => {
+            // Check if the response status is OK (200)
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            // Parse the response JSON data
+            return response.json();
+          })
+          .then(data => {
+            // Handle the JSON data
+            console.log(data);
+
+            const taskId = data.task_id
+            let interval = false;
+
+            interval = setInterval(() => {
+
+              fetch('/v1/selfie-with-taiwanese-id/verify?task_id=' + taskId, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+              }).then(response => {
+                // Check if the response status is OK (200)
+                if (!response.ok) {
+                  throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                // Parse the response JSON data
+                return response.json();
+              }).then(data => {
+                if ('is_valid_bool' in data){
+                  clearInterval(interval)
+                  const scoreNumber = Math.round(Math.random() * 100, 1)
+                  // score.innerHTML = scoreNumber + '%';
+                  // Hide the loading spinner and show the success message
+                  loaderContainer.style.display = 'none';
+                  retryButton.style.display = 'inline';
+                  // score.style.display = 'block';
+
+                  if (data.is_valid_bool){
+                      shieldTick.style.display = 'inline'
+                  } else {
+                      errorMessage.style.display = 'block'
+                      errorMessage.innerHTML = data.err_msg
+                      shieldCross.style.display = 'inline'
+                  }
+                  const checkValid = (isValid, div) => {
+                    if (isValid) {
+                      div.classList.add('bi-check', 'text-success')
+                    } else {
+                      div.classList.add('bi-x', 'text-danger')
+                    }
+                  };
+
+                  verifyInfo.style.display = 'block';
+                  idCardVerify.innerHTML = '身分證正面掃描';
+                  idCardBackVerify.innerHTML = '身分證背面掃描';
+                  healthCardVerify.innerHTML = '健保卡掃描';
+                  infoVerify.innerHTML = '證件資料完整性';
+                  faceVerify.innerHTML = '人臉比對結果';
+                  faceScore1.innerHTML = `證件人臉比對分數： ${data.face_validation.id_card_faces_compare_score}`;
+                  faceScore2.innerHTML = `證件人臉與本人比對分數： ${data.face_validation.id_card_vs_person_face_compare_score}`;
+                  checkValid(data.ocr_validation.id_card_verify_out.verification.is_valid_bool, idCardVerify)
+                  checkValid(data.ocr_validation.id_card_back_verify_out.verification.is_valid_bool, idCardBackVerify)
+                  checkValid(data.ocr_validation.health_card_verify_out.verification.is_valid_bool, healthCardVerify)
+                  checkValid(data.info_validation.is_valid_bool, infoVerify)
+                  checkValid(data.face_validation.is_valid_bool, faceVerify)
+                }
+              }).catch(error => {
+                console.error('Fetch error:', error);
+              })
+
+            }, 3000)
+          })
+          .catch(error => {
+            // Handle any errors that occurred during the fetch
+            console.error('Fetch error:', error);
+          });
+
+          
+      });
+
+      // Capture a photo when the "Capture Photo" button is clicked
+      captureButton.addEventListener('click', function () {
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = cameraView.videoWidth;
+          canvas.height = cameraView.videoHeight;
+          context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
+
+          const base64Image = canvas.toDataURL('image/jpeg');
+
+          cameraView.style.display = 'none';
+          cameraContainer.style.display = 'none';
+          if (onTriggeredIndex === 0) {
+              cameraTrigger.style.display = 'none';
+          } else if (onTriggeredIndex === 1) {
+              cameraTrigger1.style.display = 'none';
+          } else if (onTriggeredIndex === 2) {
+              cameraTrigger2.style.display = 'none';
+          } else if (onTriggeredIndex === 3) {
+              cameraTrigger3.style.display = 'none';
+          }
+          captureButton.style.display = 'none';
+              // Replace the "cameraTrigger" div with the captured photo
+              const img = document.createElement('img');
+              img.style.width = '100%';
+              img.src = base64Image;
+
+              if (onTriggeredIndex === 0) {
+                  cameraTrigger.innerHTML = '';
+                  cameraTrigger.appendChild(img);
+                  cameraTrigger.style.display = 'block';
+              } else if (onTriggeredIndex === 1) {
+                  cameraTrigger1.innerHTML = '';
+                  cameraTrigger1.appendChild(img);
+                  cameraTrigger1.style.display = 'block';
+              } else if (onTriggeredIndex === 2) {
+                  cameraTrigger2.innerHTML = '';
+                  cameraTrigger2.appendChild(img);
+                  cameraTrigger2.style.display = 'block';
+              } else if (onTriggeredIndex === 3) {
+                  cameraTrigger3.innerHTML = '';
+                  cameraTrigger3.appendChild(img);
+                  cameraTrigger3.style.display = 'block';
+              }
+              onTriggeredIndex = -1;
+      });
+    </script>
+</body>
+</html>

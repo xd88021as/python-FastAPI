@@ -1,0 +1,43 @@
+{
+    "azure": {
+        "endpoint": "",
+        "subscription_key": ""
+    },
+    "encryption": {
+        "rsa": {
+            "mode": "pkcs8"
+        },
+        "aes": {
+            "key": "0CoJUm6Qyw8W8jud",
+            "vi": "0102030405060708"
+        }
+    },
+    "face8": {
+        "api_key": "",
+        "api_secret": ""
+    },
+    "faceplusplus": {
+        "api_key": "",
+        "api_secret": ""
+    },
+    "google_vison_ocr": {
+        "api_key": ""
+    },
+    "household_registration_api": {
+        "org_id": "",
+        "ap_id": "",
+        "iss": "",
+        "apache_ip": "0.0.0.0",
+        "apache_port": 0
+    },
+    "jwt": {
+        "key": "test1234"
+    },
+    "mongodb": {
+        "host": "localhost",
+        "port": 27017,
+        "username": null,
+        "password": null,
+        "database": "database"
+    }
+}
