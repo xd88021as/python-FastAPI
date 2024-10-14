@@ -5,8 +5,8 @@ from typing import List, Union
 
 
 class ResourceEnum(IntEnum):
-    SelfieAuth = 1
-    PsDetect = 2
+    test = 1
+    testPs = 2
 
 
 class Resource(BaseModel):
@@ -35,9 +35,9 @@ class Resource(BaseModel):
     def insert_default(cls):
         if Resource.find_one({}) is None:
             resource_list = [
-                {"id": ResourceEnum.SelfieAuth, "name": "SelfieAuth 持證自拍驗證",
+                {"id": ResourceEnum.test, "name": "test 持證自拍驗證",
                     "price": 25.0, "currency": "TWD"},
-                {"id": ResourceEnum.PsDetect, "name": "PsDetect P圖偵測",
+                {"id": ResourceEnum.testPs, "name": "testPs P圖偵測",
                     "price": 20.0, "currency": "TWD"}
             ]
             MongoDB.insert_many(collection="resource", data=resource_list)

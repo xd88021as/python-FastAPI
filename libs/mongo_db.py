@@ -7,12 +7,6 @@ from pymongo import MongoClient, ASCENDING
 class MongoDB(BaseModel):
 
     def get_collection():
-        """ 取得 MongoDB collection
-
-        Raises:
-            pymongo.errors.ServerSelectionTimeoutError: mongodb 連線失敗.
-
-        """
         config = Config.get()
         host: str = config.mongo_db.host or "localhost"
         port: int = config.mongo_db.port or 27017

@@ -32,8 +32,6 @@ class OcrValidation(BaseModel):
 
 
 class FaceValidation(BaseModel):
-    """ 人臉辨識核實結果
-    """
     id_card_faces_compare_score: float = Field(
         0.0,
         description="比對「身分證正面照: 證照人臉」和「持證自拍照: 證照人臉」的相似度 (0~100分)",
@@ -61,8 +59,6 @@ class FaceValidation(BaseModel):
 
 
 class VerifyOut(BaseModel):
-    """ 身分驗證核實結果
-    """
     ocrValidation: OcrValidation = Field(
         ...,
         description="OCR 辨識與資料完整性核實結果",
@@ -94,6 +90,4 @@ class VerifyOut(BaseModel):
 
 
 class HoldCardSelfie(HasFaceBase):
-    """ 持證照自拍
-    """
     pass

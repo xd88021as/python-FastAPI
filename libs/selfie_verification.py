@@ -19,11 +19,7 @@ from libs.hold_card_selfie import HoldCardSelfie
 
 
 class FaceServerBase(BaseModel):
-    """ 人臉辨識服務基底類
-    """
     class FaceInfoBase(BaseModel):
-        """ 人臉資訊基底類
-        """
         face_count: int = 0
         is_face_count_valid: bool = False
 
@@ -42,12 +38,7 @@ class FaceServerBase(BaseModel):
 
 
 class SelfieVerificationOut(BaseModel):
-    """ 實名認證結果
-    """
-
     class Ocr(BaseModel):
-        """ 實名認證 OCR 辨識結果
-        """
         id_card: IDCardOcrOut
         id_card_back: IDCardBackOcrOut
         health_card: HealthCardOcrOut
@@ -82,11 +73,7 @@ class SelfieVerificationOut(BaseModel):
             ), (id_card, id_card_back, health_card)
 
     class OcrValidation(BaseModel):
-        """ 實名認證 OCR 辨識結果
-        """
-
         class IDCardVerifyOut(BaseModel):
-
             class Verification(BaseModel):
                 is_valid_bool: bool
                 err_msg: str = None
@@ -138,7 +125,6 @@ class SelfieVerificationOut(BaseModel):
                 ), (id_card_strict)
 
         class IDCardBackVerifyOut(BaseModel):
-
             class Verification(BaseModel):
                 is_valid_bool: bool
                 err_msg: str = None
@@ -171,7 +157,6 @@ class SelfieVerificationOut(BaseModel):
                 ), (id_card_back_strict)
 
         class HealthCardVerifyOut(BaseModel):
-
             class Verification(BaseModel):
                 is_valid_bool: bool
                 err_msg: str = None
@@ -229,8 +214,6 @@ class SelfieVerificationOut(BaseModel):
             ), (id_card_strict, id_card_back_strict, health_card_strict)
 
     class InfoValidation(BaseModel):
-        """ 實名認證資料驗證結果
-        """
         is_valid_bool: bool
         err_msg: str = None
 
@@ -265,8 +248,6 @@ class SelfieVerificationOut(BaseModel):
             )
 
     class FaceDetect(BaseModel):
-        """ 各服務辨識各證件人臉列表結果
-        """
         class FaceplusplusFaceServer(FaceServerBase):
             class FaceInfo(FaceServerBase.FaceInfoBase):
                 face_list: List[Faceplusplus.Face] = []
@@ -286,11 +267,9 @@ class SelfieVerificationOut(BaseModel):
                 id_card: HasFaceBase,
                 hold_card_selfie: HasFaceBase,
         ) -> "SelfieVerificationOut.FaceDetect":
-            # 確認參數類型正確
             assert isinstance(id_card, HasFaceBase)
             assert isinstance(hold_card_selfie, HasFaceBase)
 
-            # 建立實例字典
             faceValidation_dict = dict()
             for server_name in ["Faceplusplus"]:
                 logger.debug(f"建立 {server_name} 服務辨識各證件人臉列表結果...")
@@ -313,13 +292,8 @@ class SelfieVerificationOut(BaseModel):
             return cls.parse_obj(faceValidation_dict)
 
     class FaceComparison(BaseModel):
-        """ 各服務辨識各證件人臉比對結果
-        """
         class FaceplusplusServer(BaseModel):
-
             class IDCardFacesCompare(BaseModel):
-                """ 比對「身分證正面照: 證照人臉」和「持證自拍照: 證照人臉」的結果
-                """
                 score: float = 0.0
                 is_valid: bool = False
                 msg: str = None
@@ -337,8 +311,6 @@ class SelfieVerificationOut(BaseModel):
                     }
 
             class IDCardVsPersonFacesCompare(BaseModel):
-                """ 比對「身分證正面照: 證照人臉」和「持證自拍照: 自拍人臉」的結果
-                """
                 score: float = 0.0
                 is_valid: bool = False
                 msg: str = None
@@ -390,15 +362,10 @@ class SelfieVerificationOut(BaseModel):
                             msg="身分證正面人臉數量不為 1 個，或持證自拍照人臉數量不為 2 個."
                         )
                     )
-
-                # Face++ 服務的人臉比對結果
                 faceplusplus_id_card_face = faceplusplus_id_card_face_list[0]
 
-                # 獲取人臉比對相似度分數
                 (
-                    # 獲取「身分證正面照: 證照人臉」和「持證自拍照: 證照人臉」相似度分數
                     id_card_faces_compare_score,
-                    # 獲取「身分證正面照: 證照人臉」和「持證自拍照: 自拍人臉」相似度分數
                     id_card_vs_person_faces_compare_score,
                 ) = sorted([
                     faceplusplus_id_card_face.compare_face(face)
@@ -407,21 +374,14 @@ class SelfieVerificationOut(BaseModel):
                 logger.debug(f"{id_card_faces_compare_score = }")
                 logger.debug(f"{id_card_vs_person_faces_compare_score = }")
 
-                # 比對「持證自拍照:證照人臉」和「身分證正面照:證照人臉」相似度應達80%上
                 id_card_faces_compare_msg = None
                 if id_card_faces_compare_score < 80:
                     id_card_faces_compare_msg = "「持證自拍照:證照人臉」和「身分證正面照:證照人臉」相似度應達 80% 以上"
 
-                # 比對「持證自拍照:自拍人臉」和「身分證正面照:證照人臉」相似度，符合以下條件:
-                # 若發證不滿 2 年，則相似度應達 70 分以上
                 id_card_vs_person_faces_compare_msg = None
-                # 若身分證 ocr 可獲取出生年份，則計算發證至今年已過幾年
                 if idCard.apply_yyy != "":
-                    # 獲取發證西元年分
                     idCard_apply_yyyy_int = int(idCard.apply_yyy) + 1911
-                    # 獲取今年西元年分
                     now_yyyy_int = datetime.datetime.now().year
-                    # 計算發證至今年已過幾年
                     idCard_apply_passed_year_int = now_yyyy_int - idCard_apply_yyyy_int
 
                     if (
@@ -429,17 +389,14 @@ class SelfieVerificationOut(BaseModel):
                         id_card_vs_person_faces_compare_score < 70
                     ):
                         id_card_vs_person_faces_compare_msg = f"「持證自拍照:自拍人臉」和「身分證正面照:證照人臉」相似度應達 80% 以上 (發證經過年數:{idCard_apply_passed_year_int})"
-                    # 若發證不滿 5 年，則相似度應達 65 分以上
                     if (
                         idCard_apply_passed_year_int < 5 and
                         id_card_vs_person_faces_compare_score < 65
                     ):
                         id_card_vs_person_faces_compare_msg = f"「持證自拍照:自拍人臉」和「身分證正面照:證照人臉」相似度應達 65% 以上 (發證經過年數:{idCard_apply_passed_year_int})"
-                    # 若發證 5 年以上，則相似度應達 60 分以上
                     if id_card_vs_person_faces_compare_score < 60:
                         id_card_vs_person_faces_compare_msg = f"「持證自拍照:自拍人臉」和「身分證正面照:證照人臉」相似度應達 60% 以上 (發證經過年數:{idCard_apply_passed_year_int})"
 
-                # 若身分證 ocr 不可獲取出生年份
                 else:
                     id_card_vs_person_faces_compare_msg = "身分證 ocr 無法獲取出生年份，故缺少標準檢驗「持證自拍照:自拍人臉」和「身分證正面照:證照人臉」相似度"
 
@@ -482,7 +439,6 @@ class SelfieVerificationOut(BaseModel):
             )
 
     class FaceValidation(BaseModel):
-
         id_card_faces_compare_score: float = 0.0
         id_card_vs_person_face_compare_score: float = 0.0
         is_valid_bool: bool = True
@@ -547,7 +503,6 @@ class SelfieVerificationOut(BaseModel):
             SelfieVerificationOut
         """
 
-        # 獲已處理照片實例: 1.身分證正面 2.身分證反面 3.健保卡 4.持身分證自拍照
         logger.debug("正在處理四張照片...")
         (
             id_card_image,
@@ -561,7 +516,6 @@ class SelfieVerificationOut(BaseModel):
             Image(bytes_=hold_card_selfie_image_bytes),
         )
 
-        # 獲取各證件 ocr 辨識結果
         ocr, (id_card, id_card_back, health_card) = SelfieVerificationOut.Ocr.from_images(
             id_card_image=id_card_image,
             id_card_back_image=id_card_back_image,

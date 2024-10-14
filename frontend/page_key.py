@@ -15,7 +15,7 @@ def generate():
                 {'name': 'status', 'label': '狀態', 'field': 'status', 'sortable': True, 'align': 'left'},
             ]
             rows = [
-                {'service': 'SelfieAuth 持證自拍驗證', 'api_key': 'mlknqerAls12asdf_1fsq', 'expiring_at': '2024/01/08 14:30', 'status': '生效中'},
-                {'service': 'PsDetect P圖偵測', 'api_key': 'apower;lw112asdf_1fsq', 'expiring_at': '2024/01/08 14:30', 'status': '生效中'},
+                {'service': 'test 持證自拍驗證', 'api_key': 'mlknqerAls12asdf_1fsq', 'expiring_at': '2024/01/08 14:30', 'status': '生效中'},
+                {'service': 'testPs P圖偵測', 'api_key': 'apower;lw112asdf_1fsq', 'expiring_at': '2024/01/08 14:30', 'status': '生效中'},
             ]
             ui.table(columns=columns, rows=rows, row_key='name').classes('w-full')

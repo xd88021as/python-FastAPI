@@ -1,7 +1,3 @@
-# Identity Verification
-
-使用 FastAPI 建立的實名認證 API 服務
-
 ## 運行方式
 
 - uvicorn
@@ -19,5 +15,5 @@
     ```
 
 ## API 文件
-- 運行後進入 http://localhost:8000/docs 可瀏覽交互式 API 文件 (OpenAPI)
+- http://localhost:8000/docs
 
